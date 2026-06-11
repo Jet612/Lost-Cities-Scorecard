@@ -53,9 +53,11 @@ body {
       transparent 1px,
       transparent 26px
     );
-  min-height: 100vh;
+  min-height: 100dvh;
   line-height: 1.4;
   -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
 }
 
 /* film grain / paper fibre overlay */
@@ -183,7 +185,9 @@ body {
 
 .scoreboard {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  /* minmax(0, …) lets the columns shrink below their content width so a
+     long player name can't push the second card off-screen */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: clamp(0.7rem, 2.5vw, 1.3rem);
   margin: clamp(1.4rem, 4vw, 2.2rem) 0 1.4rem;
   animation: rise 0.7s 0.06s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -191,6 +195,7 @@ body {
 
 .total-card {
   position: relative;
+  min-width: 0;
   background: linear-gradient(170deg, var(--paper) 0%, var(--paper-deep) 100%);
   border: 1px solid var(--line);
   border-radius: var(--radius);
@@ -324,6 +329,7 @@ body {
   padding: 0.5rem 0.95rem;
   cursor: pointer;
   transition: all 0.25s ease;
+  touch-action: manipulation;
 }
 .tab-dot {
   width: 6px;
@@ -417,6 +423,32 @@ body {
   border-color: var(--crimson);
 }
 
+/* neutral secondary button (Previous Round) — undo, not destructive */
+.minor-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  touch-action: manipulation;
+  white-space: nowrap;
+}
+.minor-btn:hover {
+  background: var(--ink);
+  color: var(--paper);
+  border-color: var(--ink);
+}
+.minor-btn:active {
+  transform: scale(0.97);
+}
+
 .primary-btn {
   font-family: 'Cinzel', serif;
   font-size: 0.66rem;
@@ -432,6 +464,10 @@ body {
   box-shadow: 0 8px 18px -10px rgba(42, 31, 20, 0.9),
     inset 0 1px 0 rgba(255, 246, 224, 0.12);
   transition: all 0.2s;
+  touch-action: manipulation;
+}
+.primary-btn:active {
+  transform: scale(0.97);
 }
 .primary-btn:hover {
   background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 100%);
@@ -525,6 +561,9 @@ body {
   transition: transform 0.14s ease, box-shadow 0.18s ease, color 0.18s,
     background 0.18s, border-color 0.18s;
   font-variant-numeric: tabular-nums;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
 }
 .card::after {
   content: '';
@@ -538,6 +577,14 @@ body {
   transform: translateY(-2px);
   color: var(--ink);
   box-shadow: 0 6px 12px -7px rgba(40, 28, 14, 0.6);
+}
+/* tactile press feedback (matters most on touch, where there's no hover) */
+.card:active {
+  transform: scale(0.9);
+  transition-duration: 0.05s;
+}
+.card.is-played:active {
+  transform: scale(0.9);
 }
 
 .card-hs {
@@ -792,13 +839,19 @@ body {
 
 .summary-actions {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
   justify-content: center;
+  gap: 0.8rem;
   margin-top: 1.8rem;
   animation: rise 0.6s 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 .summary-actions .primary-btn {
   font-size: 0.74rem;
   padding: 0.8rem 1.6rem;
+}
+.summary-actions .minor-btn {
+  padding: 0.75rem 1.2rem;
 }
 
 /* ----------------------------- motion ----------------------------- */
@@ -823,13 +876,75 @@ body {
 
 /* --------------------------- responsive --------------------------- */
 
-@media (max-width: 560px) {
+@media (max-width: 600px) {
+  .ledger {
+    padding-bottom: 2rem;
+  }
+
+  /* --- scoreboard --- */
+  .scoreboard {
+    gap: 0.6rem;
+  }
+  .total-card {
+    padding: 0.9rem 0.6rem 1rem;
+  }
+  .total-card-head {
+    flex-wrap: wrap;
+  }
+
+  /* --- controls: stacked, full-width finish button --- */
+  .controls {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.8rem;
+  }
+  .tabs {
+    width: 100%;
+  }
+  .tab {
+    flex: 1;
+    min-width: 0;
+    justify-content: center;
+    padding: 0.65rem 0.4rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .control-buttons {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 0.7rem;
+  }
+  .switch {
+    margin-right: auto;
+  }
+  .ghost-btn {
+    padding: 0.6rem 0.95rem;
+  }
+  .control-buttons .primary-btn {
+    flex: 1 1 100%;
+    text-align: center;
+    padding: 0.9rem;
+    font-size: 0.72rem;
+  }
+
+  /* keep the name field at 16px so iOS doesn't zoom on focus */
+  .name-input {
+    font-size: 16px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  /* --- expedition rows: spine + score on top, cards fill below --- */
   .exp {
     grid-template-columns: 1fr auto;
     grid-template-areas:
       'spine score'
       'cards cards';
-    row-gap: 0.6rem;
+    row-gap: 0.7rem;
+    padding: 0.8rem 0.85rem;
   }
   .exp-spine {
     grid-area: spine;
@@ -837,17 +952,64 @@ body {
     align-items: baseline;
     gap: 0.5rem;
   }
+  .exp-name {
+    font-size: 0.7rem;
+  }
   .exp-score {
     grid-area: score;
   }
   .exp-cards {
     grid-area: cards;
-  }
-  .controls {
     flex-direction: column;
     align-items: stretch;
+    gap: 0.5rem;
+    min-width: 0;
   }
-  .control-buttons {
-    justify-content: space-between;
+
+  /* Both card groups share one 5-column grid: every card is identical
+     width and the rows line up into a tidy matrix. grid-auto-rows +
+     align-content:start keep the tracks from stretching vertically. */
+  .hs-group,
+  .num-group {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    grid-auto-rows: 48px;
+    align-content: start;
+    gap: 0.4rem;
+    width: 100%;
+  }
+  .hs-group {
+    border-right: none;
+    padding-right: 0;
+    margin-right: 0;
+  }
+  .card {
+    height: 48px;
+    font-size: 1.1rem;
+  }
+  .card-hs,
+  .card-num {
+    width: auto;
+  }
+
+  /* --- summary --- */
+  .scorecard-table {
+    padding: 0.3rem 0.8rem 0.5rem;
+  }
+  .scorecard-table th,
+  .scorecard-table td {
+    padding: 0.55rem 0.35rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .hs-group,
+  .num-group {
+    grid-auto-rows: 44px;
+    gap: 0.35rem;
+  }
+  .card {
+    height: 44px;
+    font-size: 1rem;
   }
 }

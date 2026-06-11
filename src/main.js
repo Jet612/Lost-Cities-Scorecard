@@ -58,6 +58,11 @@ function loadState() {
       p.board = { ...blankBoard(), ...(p.board || {}) };
     });
     if (!Array.isArray(merged.history)) merged.history = [];
+    // Normalise history entries to { scores, boards }. Older saves stored a
+    // bare [scoreP0, scoreP1] array with no board snapshot.
+    merged.history = merged.history.map((rec) =>
+      Array.isArray(rec) ? { scores: rec, boards: null } : rec
+    );
     return merged;
   } catch {
     return defaultState();
@@ -108,7 +113,11 @@ function scoreBoard(board) {
 
 /* Points already banked from completed rounds for a given player. */
 function bankedTotal(playerIndex) {
-  return state.history.reduce((sum, round) => sum + round[playerIndex], 0);
+  return state.history.reduce((sum, rec) => sum + rec.scores[playerIndex], 0);
+}
+
+function cloneBoard(board) {
+  return JSON.parse(JSON.stringify(board));
 }
 
 /* --------------------------- helpers ----------------------------- */
@@ -183,6 +192,7 @@ function renderPlaying() {
             <span class="switch-track"><span class="switch-thumb"></span></span>
             <span class="switch-label">6th Expedition</span>
           </label>
+          ${state.history.length > 0 ? '<button class="minor-btn" id="prev-btn">← Previous Round</button>' : ''}
           <button class="ghost-btn" id="clear-btn">Clear Round</button>
           <button class="primary-btn" id="finish-btn">
             ${isFinalRound ? 'Finish Game' : 'Finish Round'} →
@@ -327,7 +337,7 @@ function renderSummary() {
                 (round, r) => `
               <tr>
                 <td class="round-cell">Round ${r + 1}</td>
-                ${round
+                ${round.scores
                   .map((s) => `<td class="${s < 0 ? 'neg' : s > 0 ? 'pos' : ''}">${signed(s)}</td>`)
                   .join('')}
               </tr>`
@@ -348,6 +358,7 @@ function renderSummary() {
       </section>
 
       <div class="summary-actions">
+        <button class="minor-btn" id="prev-btn">← Previous Round</button>
         <button class="primary-btn" id="newgame-btn">Mount a New Expedition →</button>
       </div>
 
@@ -357,9 +368,8 @@ function renderSummary() {
     </main>
   `;
 
-  app
-    .querySelector('#newgame-btn')
-    ?.addEventListener('click', newGame);
+  app.querySelector('#newgame-btn')?.addEventListener('click', newGame);
+  app.querySelector('#prev-btn')?.addEventListener('click', previousRound);
 }
 
 /* --------------------------- events ------------------------------ */
@@ -402,11 +412,14 @@ function bindPlaying() {
   });
 
   app.querySelector('#finish-btn')?.addEventListener('click', finishRound);
+  app.querySelector('#prev-btn')?.addEventListener('click', previousRound);
 }
 
 function finishRound() {
   const scores = state.players.map((p) => scoreBoard(p.board));
-  state.history.push(scores);
+  // Snapshot the boards too, so finishing can be undone with Previous Round.
+  const boards = state.players.map((p) => cloneBoard(p.board));
+  state.history.push({ scores, boards });
 
   if (state.round >= state.totalRounds) {
     state.phase = 'summary';
@@ -415,6 +428,22 @@ function finishRound() {
     state.players.forEach((p) => (p.board = blankBoard()));
     state.active = 0;
   }
+  save();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* Undo the most recently finished round: restore its boards and return to
+   the playing phase. Works from mid-game and from the summary page. */
+function previousRound() {
+  if (state.history.length === 0) return;
+  const last = state.history.pop();
+  state.players.forEach((p, i) => {
+    p.board = last.boards ? cloneBoard(last.boards[i]) : blankBoard();
+  });
+  state.round = state.history.length + 1;
+  state.phase = 'playing';
+  state.active = 0;
   save();
   render();
   window.scrollTo({ top: 0, behavior: 'smooth' });
