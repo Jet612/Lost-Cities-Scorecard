@@ -476,6 +476,25 @@ body {
   transform: translateY(-1px);
 }
 
+/* end-of-round action bar, sitting right below the expedition board */
+.round-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--line);
+}
+.round-actions .primary-btn {
+  font-size: 0.78rem;
+  padding: 0.9rem 2.2rem;
+}
+.round-actions .minor-btn {
+  padding: 0.78rem 1.3rem;
+}
+
 /* ------------------------------ board ----------------------------- */
 
 .board {
@@ -921,12 +940,23 @@ body {
   }
   .ghost-btn {
     padding: 0.6rem 0.95rem;
+    flex: 1;
   }
-  .control-buttons .primary-btn {
-    flex: 1 1 100%;
+
+  /* end-of-round bar: full-width stacked buttons, Finish most prominent */
+  .round-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 0.7rem;
+  }
+  .round-actions .primary-btn,
+  .round-actions .minor-btn {
+    width: 100%;
     text-align: center;
-    padding: 0.9rem;
-    font-size: 0.72rem;
+  }
+  .round-actions .primary-btn {
+    padding: 1rem;
+    font-size: 0.74rem;
   }
 
   /* keep the name field at 16px so iOS doesn't zoom on focus */

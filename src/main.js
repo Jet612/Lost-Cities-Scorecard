@@ -192,11 +192,7 @@ function renderPlaying() {
             <span class="switch-track"><span class="switch-thumb"></span></span>
             <span class="switch-label">6th Expedition</span>
           </label>
-          ${state.history.length > 0 ? '<button class="minor-btn" id="prev-btn">← Previous Round</button>' : ''}
           <button class="ghost-btn" id="clear-btn">Clear Round</button>
-          <button class="primary-btn" id="finish-btn">
-            ${isFinalRound ? 'Finish Game' : 'Finish Round'} →
-          </button>
         </div>
       </section>
 
@@ -204,6 +200,13 @@ function renderPlaying() {
         ${activeExpeditions()
           .map((e) => expeditionRow(e, state.players[state.active].board[e.id]))
           .join('')}
+      </section>
+
+      <section class="round-actions">
+        ${state.history.length > 0 ? '<button class="minor-btn" id="prev-btn">← Previous Round</button>' : ''}
+        <button class="primary-btn" id="finish-btn">
+          ${isFinalRound ? 'Finish Game &amp; See Results' : `Finish Round ${state.round}`} →
+        </button>
       </section>
 
       <footer class="colophon">
