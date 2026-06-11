@@ -8,10 +8,12 @@ import './style.css';
  *    3. Multiply the running total by (handshakes + 1).
  *    4. If 8 or more cards were played, add a +20 bonus.
  *  An expedition with no cards scores nothing.
+ *  A game is played over several rounds; the highest grand total wins.
  * ------------------------------------------------------------------ */
 
 const NUMBERS = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 const MAX_HANDSHAKES = 3;
+const TOTAL_ROUNDS = 3;
 
 const EXPEDITIONS = [
   { id: 'yellow', name: 'Yellow', glyph: 'Ⅰ' },
@@ -24,7 +26,7 @@ const EXPEDITIONS = [
 
 /* ----------------------------- state ----------------------------- */
 
-const STORAGE_KEY = 'lost-cities-ledger-v1';
+const STORAGE_KEY = 'lost-cities-ledger-v2';
 
 const blankBoard = () =>
   Object.fromEntries(
@@ -38,6 +40,10 @@ const defaultState = () => ({
   ],
   active: 0,
   sixth: false, // include the purple (6th) expedition
+  round: 1, // 1-based current round
+  totalRounds: TOTAL_ROUNDS,
+  history: [], // history[r] = [scoreP0, scoreP1]
+  phase: 'playing', // 'playing' | 'summary'
 });
 
 function loadState() {
@@ -45,13 +51,14 @@ function loadState() {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
-    // light validation / migration
-    if (!parsed.players || parsed.players.length !== 2) return defaultState();
-    parsed.players.forEach((p) => {
-      const base = blankBoard();
-      p.board = { ...base, ...(p.board || {}) };
+    const base = defaultState();
+    const merged = { ...base, ...parsed };
+    if (!merged.players || merged.players.length !== 2) return base;
+    merged.players.forEach((p) => {
+      p.board = { ...blankBoard(), ...(p.board || {}) };
     });
-    return parsed;
+    if (!Array.isArray(merged.history)) merged.history = [];
+    return merged;
   } catch {
     return defaultState();
   }
@@ -99,6 +106,11 @@ function scoreBoard(board) {
   );
 }
 
+/* Points already banked from completed rounds for a given player. */
+function bankedTotal(playerIndex) {
+  return state.history.reduce((sum, round) => sum + round[playerIndex], 0);
+}
+
 /* --------------------------- helpers ----------------------------- */
 
 const signed = (n) => (n > 0 ? `+${n}` : `${n}`);
@@ -111,14 +123,23 @@ function expeditionDetail(result) {
   return `${mult}${cards}${bonus}`;
 }
 
+function leaderOf(totals) {
+  return totals[0] === totals[1] ? -1 : totals[0] > totals[1] ? 0 : 1;
+}
+
 /* --------------------------- rendering --------------------------- */
 
 const app = document.getElementById('app');
 
 function render() {
-  const totals = state.players.map((p) => scoreBoard(p.board));
-  const leader =
-    totals[0] === totals[1] ? -1 : totals[0] > totals[1] ? 0 : 1;
+  if (state.phase === 'summary') renderSummary();
+  else renderPlaying();
+}
+
+/* ---- playing phase ---- */
+
+function renderPlaying() {
+  const isFinalRound = state.round >= state.totalRounds;
 
   app.innerHTML = `
     <div class="grain" aria-hidden="true"></div>
@@ -129,12 +150,19 @@ function render() {
         <h1>Lost Cities</h1>
         <p class="subtitle">Expedition Ledger &amp; Scorekeeper</p>
         <div class="rule"><span class="diamond">◆</span></div>
+        <div class="round-status">
+          <span class="round-dots">
+            ${Array.from({ length: state.totalRounds }, (_, i) => {
+              const cls = i + 1 < state.round ? 'done' : i + 1 === state.round ? 'current' : '';
+              return `<span class="round-dot ${cls}"></span>`;
+            }).join('')}
+          </span>
+          <span class="round-label">Round ${state.round} of ${state.totalRounds}</span>
+        </div>
       </header>
 
       <section class="scoreboard">
-        ${state.players
-          .map((p, i) => playerTotalCard(p, totals[i], leader, i))
-          .join('')}
+        ${state.players.map((p, i) => playerTotalCard(p, i)).join('')}
       </section>
 
       <section class="controls">
@@ -155,7 +183,10 @@ function render() {
             <span class="switch-track"><span class="switch-thumb"></span></span>
             <span class="switch-label">6th Expedition</span>
           </label>
-          <button class="ghost-btn" id="reset-btn">Clear Ledger</button>
+          <button class="ghost-btn" id="clear-btn">Clear Round</button>
+          <button class="primary-btn" id="finish-btn">
+            ${isFinalRound ? 'Finish Game' : 'Finish Round'} →
+          </button>
         </div>
       </section>
 
@@ -171,12 +202,22 @@ function render() {
     </main>
   `;
 
-  bind();
+  bindPlaying();
 }
 
-function playerTotalCard(player, total, leader, index) {
+/* big number = whole-game total so far (banked rounds + live round) */
+function bankedTotal_plusLive(player, index) {
+  return bankedTotal(index) + scoreBoard(player.board);
+}
+
+function playerTotalCard(player, index) {
+  const totals = state.players.map((p, i) => bankedTotal_plusLive(p, i));
+  const leader = leaderOf(totals);
+  const total = totals[index];
+  const roundScore = scoreBoard(player.board);
   const isLeader = leader === index;
   const tie = leader === -1;
+
   return `
     <article class="total-card ${isLeader ? 'is-leader' : ''}" data-edit-player="${index}">
       <div class="total-card-head">
@@ -185,7 +226,7 @@ function playerTotalCard(player, total, leader, index) {
         ${isLeader ? '<span class="badge">Leading</span>' : tie ? '<span class="badge tie">Tied</span>' : ''}
       </div>
       <div class="total-value ${total < 0 ? 'is-neg' : ''}">${total}</div>
-      <div class="total-sub">points</div>
+      <div class="total-sub">Round ${state.round} · <span class="round-delta">${signed(roundScore)}</span></div>
     </article>
   `;
 }
@@ -207,13 +248,7 @@ function expeditionRow(exp, cell) {
       data-exp="${exp.id}" data-num="${n}" aria-pressed="${on}">${n}</button>`;
   }).join('');
 
-  const subtotalClass = !result.active
-    ? 'idle'
-    : result.score < 0
-    ? 'neg'
-    : 'pos';
-
-  const detail = expeditionDetail(result);
+  const subtotalClass = !result.active ? 'idle' : result.score < 0 ? 'neg' : 'pos';
 
   return `
     <article class="exp" data-color="${exp.id}">
@@ -227,15 +262,109 @@ function expeditionRow(exp, cell) {
       </div>
       <div class="exp-score ${subtotalClass}">
         <span class="exp-score-value">${result.active ? signed(result.score) : '—'}</span>
-        <span class="exp-score-detail">${detail}</span>
+        <span class="exp-score-detail">${expeditionDetail(result)}</span>
       </div>
     </article>
   `;
 }
 
+/* ---- summary phase ---- */
+
+function renderSummary() {
+  const totals = state.players.map((_, i) => bankedTotal(i));
+  const leader = leaderOf(totals);
+  const winnerName =
+    leader === -1 ? null : escapeHtml(state.players[leader].name);
+
+  app.innerHTML = `
+    <div class="grain" aria-hidden="true"></div>
+    <main class="ledger summary">
+      <header class="masthead">
+        <div class="rule"><span class="diamond">◆</span></div>
+        <p class="overline">The Expedition Concludes</p>
+        <h1>Final Reckoning</h1>
+        <p class="subtitle">${state.totalRounds} rounds · ${activeExpeditions().length} expeditions</p>
+        <div class="rule"><span class="diamond">◆</span></div>
+      </header>
+
+      <div class="winner-banner ${leader === -1 ? 'is-tie' : ''}">
+        ${
+          leader === -1
+            ? '<span class="winner-label">A Drawn Expedition</span><span class="winner-name">Both explorers tie at ' + totals[0] + '</span>'
+            : '<span class="winner-label">Victor of the Lost Cities</span><span class="winner-name">' +
+              winnerName +
+              '</span><span class="winner-score">' +
+              totals[leader] +
+              ' points</span>'
+        }
+      </div>
+
+      <section class="podium">
+        ${state.players
+          .map(
+            (p, i) => `
+          <article class="podium-card ${leader === i ? 'is-winner' : ''}">
+            ${leader === i ? '<span class="laurel">❧</span>' : ''}
+            <div class="podium-name">${escapeHtml(p.name)}</div>
+            <div class="podium-total ${totals[i] < 0 ? 'is-neg' : ''}">${totals[i]}</div>
+            <div class="podium-sub">grand total</div>
+          </article>`
+          )
+          .join('')}
+      </section>
+
+      <section class="scorecard-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Round</th>
+              ${state.players.map((p) => `<th>${escapeHtml(p.name)}</th>`).join('')}
+            </tr>
+          </thead>
+          <tbody>
+            ${state.history
+              .map(
+                (round, r) => `
+              <tr>
+                <td class="round-cell">Round ${r + 1}</td>
+                ${round
+                  .map((s) => `<td class="${s < 0 ? 'neg' : s > 0 ? 'pos' : ''}">${signed(s)}</td>`)
+                  .join('')}
+              </tr>`
+              )
+              .join('')}
+          </tbody>
+          <tfoot>
+            <tr>
+              <td class="round-cell">Total</td>
+              ${totals
+                .map(
+                  (t, i) => `<td class="${leader === i ? 'win' : ''}">${t}</td>`
+                )
+                .join('')}
+            </tr>
+          </tfoot>
+        </table>
+      </section>
+
+      <div class="summary-actions">
+        <button class="primary-btn" id="newgame-btn">Mount a New Expedition →</button>
+      </div>
+
+      <footer class="colophon">
+        <span>“Not all those who wander are lost — some are merely counting points.”</span>
+      </footer>
+    </main>
+  `;
+
+  app
+    .querySelector('#newgame-btn')
+    ?.addEventListener('click', newGame);
+}
+
 /* --------------------------- events ------------------------------ */
 
-function bind() {
+function bindPlaying() {
   app.querySelectorAll('[data-tab]').forEach((btn) =>
     btn.addEventListener('click', () => {
       state.active = Number(btn.dataset.tab);
@@ -250,12 +379,10 @@ function bind() {
       save();
     });
     input.addEventListener('change', render);
-    // keep caret usable without triggering parent handlers
     input.addEventListener('click', (e) => e.stopPropagation());
   });
 
-  // One delegated listener for every card. Clicks make surgical DOM updates
-  // (no innerHTML rebuild), so selecting cards stays instant even when fast.
+  // One delegated listener for every card → surgical updates, no rebuild.
   app.querySelector('.board').addEventListener('click', onCardClick);
 
   const toggle = app.querySelector('#sixth-toggle');
@@ -266,15 +393,42 @@ function bind() {
       render();
     });
 
-  app.querySelector('#reset-btn')?.addEventListener('click', () => {
-    if (confirm('Clear all played cards for both explorers?')) {
-      const names = state.players.map((p) => p.name);
-      state = defaultState();
-      state.players.forEach((p, i) => (p.name = names[i]));
+  app.querySelector('#clear-btn')?.addEventListener('click', () => {
+    if (confirm('Clear all played cards for this round?')) {
+      state.players.forEach((p) => (p.board = blankBoard()));
       save();
       render();
     }
   });
+
+  app.querySelector('#finish-btn')?.addEventListener('click', finishRound);
+}
+
+function finishRound() {
+  const scores = state.players.map((p) => scoreBoard(p.board));
+  state.history.push(scores);
+
+  if (state.round >= state.totalRounds) {
+    state.phase = 'summary';
+  } else {
+    state.round += 1;
+    state.players.forEach((p) => (p.board = blankBoard()));
+    state.active = 0;
+  }
+  save();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function newGame() {
+  const names = state.players.map((p) => p.name);
+  const sixth = state.sixth;
+  state = defaultState();
+  state.players.forEach((p, i) => (p.name = names[i]));
+  state.sixth = sixth;
+  save();
+  render();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function onCardClick(e) {
@@ -334,8 +488,8 @@ function refreshExpedition(expId) {
 
 /* Update both players' running totals + leader badges in place. */
 function refreshTotals() {
-  const totals = state.players.map((p) => scoreBoard(p.board));
-  const leader = totals[0] === totals[1] ? -1 : totals[0] > totals[1] ? 0 : 1;
+  const totals = state.players.map((p, i) => bankedTotal_plusLive(p, i));
+  const leader = leaderOf(totals);
   state.players.forEach((p, i) => {
     const card = app.querySelector(`[data-edit-player="${i}"]`);
     if (!card) return;
@@ -343,6 +497,10 @@ function refreshTotals() {
     val.textContent = totals[i];
     val.classList.toggle('is-neg', totals[i] < 0);
     card.classList.toggle('is-leader', leader === i);
+
+    const delta = card.querySelector('.round-delta');
+    if (delta) delta.textContent = signed(scoreBoard(p.board));
+
     const head = card.querySelector('.total-card-head');
     head.querySelector('.badge')?.remove();
     if (leader === i)

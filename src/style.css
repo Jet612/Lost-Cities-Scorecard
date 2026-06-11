@@ -133,6 +133,52 @@ body {
   color: var(--gold);
 }
 
+/* round indicator under the masthead */
+.round-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.9rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper-deep);
+}
+.round-dots {
+  display: inline-flex;
+  gap: 0.35rem;
+}
+.round-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--ink-faint);
+  transition: all 0.3s;
+}
+.round-dot.done {
+  background: var(--ink-soft);
+  border-color: var(--ink-soft);
+}
+.round-dot.current {
+  background: var(--gold-bright);
+  border-color: var(--gold);
+  box-shadow: 0 0 8px var(--gold-bright);
+}
+.round-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.round-delta {
+  font-family: 'DM Mono', monospace;
+  color: var(--ink-soft);
+}
+
 /* ---------------------------- scoreboard -------------------------- */
 
 .scoreboard {
@@ -371,6 +417,29 @@ body {
   border-color: var(--crimson);
 }
 
+.primary-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper);
+  background: linear-gradient(180deg, #34271a 0%, var(--ink) 100%);
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  padding: 0.6rem 1.1rem;
+  cursor: pointer;
+  box-shadow: 0 8px 18px -10px rgba(42, 31, 20, 0.9),
+    inset 0 1px 0 rgba(255, 246, 224, 0.12);
+  transition: all 0.2s;
+}
+.primary-btn:hover {
+  background: linear-gradient(180deg, var(--gold-bright) 0%, var(--gold) 100%);
+  border-color: var(--gold);
+  color: #2a1d0c;
+  transform: translateY(-1px);
+}
+
 /* ------------------------------ board ----------------------------- */
 
 .board {
@@ -536,6 +605,200 @@ body {
   font-style: italic;
   font-size: 0.82rem;
   color: var(--ink-faint);
+}
+
+/* ---------------------------- summary ----------------------------- */
+
+.summary .masthead {
+  margin-bottom: 0.5rem;
+}
+
+.winner-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  text-align: center;
+  margin: 1.6rem auto 2rem;
+  padding: 1.4rem 1.6rem;
+  max-width: 460px;
+  background: linear-gradient(170deg, var(--paper) 0%, var(--paper-deep) 100%);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow), 0 0 40px -16px rgba(217, 155, 43, 0.6);
+  position: relative;
+  animation: rise 0.7s 0.05s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.winner-banner::before {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px solid rgba(217, 155, 43, 0.5);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.winner-banner.is-tie {
+  border-color: var(--line);
+  box-shadow: var(--shadow);
+}
+.winner-label {
+  font-family: 'Cinzel', serif;
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.26em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.winner-name {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--ink);
+}
+.winner-score {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.92rem;
+  letter-spacing: 0.1em;
+  color: var(--ink-soft);
+}
+
+.podium {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(0.7rem, 2.5vw, 1.3rem);
+  margin-bottom: 1.8rem;
+}
+.podium-card {
+  position: relative;
+  text-align: center;
+  padding: 1.1rem 1rem;
+  background: linear-gradient(170deg, var(--paper) 0%, var(--paper-deep) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  animation: rise 0.6s 0.12s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.podium-card.is-winner {
+  border-color: var(--gold);
+  box-shadow: var(--shadow), 0 0 0 1px var(--gold-bright) inset;
+}
+.laurel {
+  position: absolute;
+  top: -0.7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.4rem;
+  color: var(--gold);
+  text-shadow: 0 1px 0 var(--paper);
+}
+.podium-name {
+  font-family: 'Cinzel', serif;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.podium-total {
+  font-family: 'DM Mono', monospace;
+  font-size: clamp(2.4rem, 10vw, 3.4rem);
+  font-weight: 500;
+  line-height: 1;
+  margin-top: 0.4rem;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.podium-total.is-neg {
+  color: var(--neg);
+}
+.podium-sub {
+  font-size: 0.66rem;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-top: 0.25rem;
+}
+
+.scorecard-table {
+  background: linear-gradient(170deg, var(--paper) 0%, var(--paper-deep) 100%);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.4rem 1.1rem 0.6rem;
+  box-shadow: 0 6px 18px -14px rgba(40, 28, 14, 0.5);
+  animation: rise 0.6s 0.18s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.scorecard-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.scorecard-table th {
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  padding: 0.7rem 0.5rem;
+  text-align: right;
+  border-bottom: 1px solid var(--line);
+}
+.scorecard-table th:first-child {
+  text-align: left;
+}
+.scorecard-table td {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.98rem;
+  padding: 0.55rem 0.5rem;
+  text-align: right;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px dashed var(--line-soft);
+}
+.scorecard-table tbody tr:last-child td {
+  border-bottom: 1px solid var(--line);
+}
+.scorecard-table .round-cell {
+  font-family: 'EB Garamond', serif;
+  font-style: italic;
+  font-size: 0.95rem;
+  text-align: left;
+  color: var(--ink-soft);
+}
+.scorecard-table td.pos {
+  color: var(--pos);
+}
+.scorecard-table td.neg {
+  color: var(--neg);
+}
+.scorecard-table tfoot td {
+  font-size: 1.2rem;
+  font-weight: 500;
+  padding-top: 0.7rem;
+  border-bottom: none;
+}
+.scorecard-table tfoot .round-cell {
+  font-family: 'Cinzel', serif;
+  font-style: normal;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+.scorecard-table td.win {
+  color: var(--gold);
+  font-weight: 500;
+}
+
+.summary-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.8rem;
+  animation: rise 0.6s 0.24s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.summary-actions .primary-btn {
+  font-size: 0.74rem;
+  padding: 0.8rem 1.6rem;
 }
 
 /* ----------------------------- motion ----------------------------- */
