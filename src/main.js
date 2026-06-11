@@ -211,6 +211,7 @@ function renderPlaying() {
 
       <footer class="colophon">
         <span>Begin every expedition at −20 · ×(handshakes + 1) · +20 at eight cards</span>
+        <span class="credit">Crafted by <a href="https://madebyjet.dev" target="_blank" rel="noopener">madebyjet.dev</a></span>
       </footer>
     </main>
   `;
@@ -367,6 +368,7 @@ function renderSummary() {
 
       <footer class="colophon">
         <span>“Not all those who wander are lost — some are merely counting points.”</span>
+        <span class="credit">Crafted by <a href="https://madebyjet.dev" target="_blank" rel="noopener">madebyjet.dev</a></span>
       </footer>
     </main>
   `;

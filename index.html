@@ -2,19 +2,135 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧭</text></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#1c140d" />
-    <title>Lost Cities · Expedition Ledger</title>
+
+    <!-- Primary meta -->
+    <title>Lost Cities Scorecard — Online Expedition Scorekeeper</title>
+    <meta
+      name="description"
+      content="Free Lost Cities scorekeeper. Tap the cards each player played and it instantly tallies expeditions, wager multipliers and round-by-round totals."
+    />
+    <meta name="author" content="Jet" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#2a1f14" />
+    <link rel="canonical" href="https://lostcities.madebyjet.dev/" />
+
+    <!-- Icons & manifest -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Lost Cities Scorecard" />
+    <meta property="og:title" content="Lost Cities Scorecard — Online Expedition Scorekeeper" />
+    <meta
+      property="og:description"
+      content="Tap the cards each player played and the app tallies every expedition, wager multiplier and round across a full game of Lost Cities."
+    />
+    <meta property="og:url" content="https://lostcities.madebyjet.dev/" />
+    <meta property="og:image" content="https://lostcities.madebyjet.dev/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Lost Cities Scorecard — Expedition Ledger & Scorekeeper" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lost Cities Scorecard — Online Expedition Scorekeeper" />
+    <meta
+      name="twitter:description"
+      content="Tap the cards each player played and the app tallies every expedition, wager multiplier and round across a full game of Lost Cities."
+    />
+    <meta name="twitter:image" content="https://lostcities.madebyjet.dev/og-image.png" />
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap"
       rel="stylesheet"
     />
+
+    <!-- Structured data: the app itself -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Lost Cities Scorecard",
+        "alternateName": "Lost Cities Expedition Ledger",
+        "url": "https://lostcities.madebyjet.dev/",
+        "description": "A free online scorekeeper for the card game Lost Cities. Tap the cards each player played and it tallies expeditions, handshake multipliers, the eight-card bonus and round-by-round totals.",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Any (web browser)",
+        "browserRequirements": "Requires JavaScript",
+        "image": "https://lostcities.madebyjet.dev/og-image.png",
+        "inLanguage": "en",
+        "isAccessibleForFree": true,
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": {
+          "@type": "Person",
+          "name": "Jet",
+          "url": "https://madebyjet.dev"
+        }
+      }
+    </script>
+
+    <!-- Structured data: scoring FAQ (eligible for rich results) -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "How do you score the card game Lost Cities?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Each expedition you start costs 20 points, so it begins at minus 20. Add the value of the number cards you played (2 to 10), then multiply that total by one plus the number of handshake (wager) cards. If you played at least eight cards in an expedition, add a 20-point bonus."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How many rounds is a game of Lost Cities?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "A standard game is played over three rounds. The player with the highest combined score across all three rounds wins."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is this Lost Cities scorekeeper free?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. It runs entirely in your browser, needs no sign-up, and saves your game on your device so you can refresh without losing progress."
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
+
+    <noscript>
+      <div style="max-width: 40rem; margin: 3rem auto; padding: 0 1.5rem; font-family: Georgia, serif; color: #2a1f14; line-height: 1.6;">
+        <h1>Lost Cities Scorecard</h1>
+        <p>
+          A free online scorekeeper for the card game <strong>Lost Cities</strong>.
+          Tap the cards each player played and it instantly tallies every
+          expedition and round of the game. This app needs JavaScript enabled to run.
+        </p>
+        <h2>How Lost Cities scoring works</h2>
+        <ul>
+          <li>Every expedition you start begins at &minus;20 points.</li>
+          <li>Add the face value of each number card played (2&ndash;10).</li>
+          <li>Multiply the total by (handshake cards + 1).</li>
+          <li>Add a 20-point bonus for playing eight or more cards in an expedition.</li>
+          <li>A game runs over three rounds; the highest combined score wins.</li>
+        </ul>
+      </div>
+    </noscript>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

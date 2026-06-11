@@ -672,6 +672,26 @@ body {
   font-size: 0.82rem;
   color: var(--ink-faint);
 }
+.colophon .credit {
+  display: block;
+  margin-top: 0.7rem;
+  font-style: normal;
+  font-family: 'Cinzel', serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.colophon .credit a {
+  color: var(--gold);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.colophon .credit a:hover {
+  color: var(--gold-bright);
+  border-bottom-color: var(--gold-bright);
+}
 
 /* ---------------------------- summary ----------------------------- */
 
